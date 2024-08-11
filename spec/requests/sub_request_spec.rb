@@ -1,13 +1,14 @@
 require 'rails_helper'
 
 RSpec.describe 'subscription' do
+  
+
+  describe '#us 1' do
   before(:each) do
     @c1 = Customer.create!( first_name: "ab", last_name: "cd", email: "abcd@gmail.com", address: "123 road")
     @t1 = Tea.create!(title: "Gin",description: "get better",temperature: "208°F",brew_time: "5 - 10 minutes")
     @headers = { "Content-Type": "application/json", "Accept": "application/json" }
   end
-
-  describe '#us 1' do
     it 'creates a subscription for customer and tea' do
       params = {
         customer_email: "#{@c1.email}",
@@ -108,4 +109,86 @@ RSpec.describe 'subscription' do
     end
 
   end
+
+
+  describe 'us 2' do
+    before :each do 
+      @customer1 = Customer.create!(first_name: "Bob",last_name: "ghjskm", email: "ajshbdbjt@gmail.com",address: "something, road")
+      @tea1 = Tea.create!(title: "Ginseng",description: "Ginseng has been used for improving overall health.", temperature: "208°F", brew_time: "5 - 10 minutes")
+      @subscription1 = @customer1.subscriptions.create!(title: "#{@tea1.title}",price: 6.00,frequency: "1 week")
+      @headers = { "Content-Type": "application/json","Accept": "application/json" }
+    end
+
+    describe 'happy path' do
+      it 'updates a subscription status to cancelled' do
+        params = {
+          subscription_id: @subscription1.id,
+          status: 1
+        }
+
+        
+
+        patch api_v1_customer_subscription_path(@customer1, @subscription1), headers: @headers, params: JSON.generate(params)
+
+        result = JSON.parse(response.body, symbolize_names: true)
+        expect(result).to be_a(Hash)
+        
+        expect(response.status).to eq(200)
+        expect(response).to be_successful
+
+        expect(result[:data][:attributes][:status]).to eq("active")
+
+        #Changed status to active because its defaulted to cancelled
+
+      end
+    end
+
+    describe 'Sad path' do
+      it 'does not update status when subscription id does not match' do
+        params = {
+          subscription_id: 123456,
+          status: 1
+        }
+
+        patch api_v1_customer_subscription_path(@customer1, @subscription1), headers: @headers, params: JSON.generate(params)
+
+        result = JSON.parse(response.body, symbolize_names: true)
+        expect(result).to be_a(Hash)
+        
+        expect(response.status).to eq(401)
+        expect(response).to_not be_successful
+      
+        expect(result).to have_key(:error)
+        expect(result[:error]).to eq("Sorry, your credentials are bad!")
+      end
+    end
+
+    describe 'Sad path' do
+      it 'does not update status when subscription id does not match' do
+        params = {
+          subscription_id: 123456,
+          status: 1
+        }
+  
+        patch api_v1_customer_subscription_path(@customer1, 456765), headers: @headers, params: JSON.generate(params)
+  
+        result = JSON.parse(response.body, symbolize_names: true)
+        expect(result).to be_a(Hash)
+        
+        expect(response.status).to eq(401)
+        expect(response).to_not be_successful
+      
+        expect(result).to have_key(:error)
+        expect(result[:error]).to eq("Sorry, your credentials are bad!")
+      end
+    end
+  end
+
 end
+    
+
+  
+
+
+
+

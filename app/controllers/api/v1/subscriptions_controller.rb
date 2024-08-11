@@ -11,8 +11,20 @@ class Api::V1::SubscriptionsController < ApplicationController
     end
   end
 
+  def update 
+    subs = Subscription.find(params[:subscription_id])
+
+    if subs.update(sub_params)
+      render json: SubscriptionSerializer.new(subs), status: :ok
+    else
+      render json: subs.errors, status: :unprocessable_entity
+    end
+    # require 'pry'; binding.pry
+  end
+
+
   private 
-  
+
   def sub_params
     params.permit(:title, :price, :frequency, :status)
   end
