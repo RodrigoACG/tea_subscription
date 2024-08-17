@@ -184,6 +184,57 @@ RSpec.describe 'subscription' do
     end
   end
 
+  describe 'subs Index' do
+    before :each do 
+      @customer1 = Customer.create!(first_name: "tom",last_name: "has", email: "sddest@gmail.com",address: "11234 st")
+      @customer2 = Customer.create!(first_name: "bob",last_name: "asdh", email: "nice@gmail.com",address: "123 rd")
+      @tea1 = Tea.create!(title: "Ginseng",description: "It has also been used to strengthen the immune system and help fight off stress and disease.",temperature: "208°F",brew_time: "5 - 10 minutes")
+      @subscription1 = @customer1.subscriptions.create!(title: "#{@tea1.title}",price: 6.00,frequency: "1 week", status: 1 )
+      @subscription2 = @customer1.subscriptions.create!(title: "subscription2 ",price: 9.00,frequency: "15 weeks" )
+      @subscription2 = @customer2.subscriptions.create!(title: "subscription3 ",price: 10.00,frequency: "4 weeks" )
+
+    end
+
+    describe 'Happy path ' do
+      it 'shows customer subscriptions' do
+        
+        get api_v1_customer_subscriptions_path(@customer1)
+
+        result = JSON.parse(response.body, symbolize_names: true)[:data]
+
+        require 'pry'; binding.pry
+
+        expect(result.first[:id]).to be_a(String)
+        expect(result.first[:type]).to be_a(String)
+        expect(result.first[:attributes][:title]).to be_a(String)
+        expect(result.first[:attributes][:price]).to be_a(String)
+        expect(result.first[:attributes][:frequency]).to be_a(String)
+        expect(result.first[:attributes][:status]).to be_a(String)
+         
+        expect(result.last[:type]).to eq("subscription")
+        expect(result.last[:attributes][:title]).to eq("subscription2 ")
+        expect(result.last[:attributes][:price]).to eq("9.0")
+        expect(result.last[:attributes][:frequency]).to eq("15 weeks")
+        expect(result.last[:attributes][:status]).to eq("cancelled")
+         
+      end
+    end
+
+    describe 'Sad path' do
+      it 'errors when ID does not match' do
+        get "/api/v1/customers/5422345678987654/subscriptions"
+        
+        result = JSON.parse(response.body, symbolize_names: true)
+        
+        expect(response.status).to eq(401)
+        expect(response).to_not be_successful
+
+        expect(result).to have_key(:error)
+        expect(result[:error]).to eq("Sorry, your credentials are bad!")
+      end
+    end
+  end
+
 end
     
 
